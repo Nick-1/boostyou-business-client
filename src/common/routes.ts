@@ -1,17 +1,8 @@
-export const CLIENT_ROUTE = {
+export const ROUTE = {
     home: '/',
-    stickers: {
-        root: '/stickers',
-        list: '/stickers/list',
-        create: '/stickers/create',
-        update: '/stickers/update',
+    admin: {
+        root: '/admin',
+        orders: '/admin/orders',
     },
-    order: {
-        root: '/order',
-        create: '/order/create',
-        payment: '/order/payment',
-        paymentSuccess: '/order/payment-success',
-
-    }
 } as const;
 

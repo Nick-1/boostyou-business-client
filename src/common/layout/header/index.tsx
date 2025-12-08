@@ -14,6 +14,8 @@ import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 
+import { ROUTE } from '../../routes.ts';
+
 import './style.scss';
 
 interface PagesList {
@@ -23,8 +25,8 @@ interface PagesList {
 
 const pages: PagesList[] = [
     {
-        label: 'My stickers',
-        path: '/stickers/list',
+        label: 'Orders',
+        path: ROUTE.admin.orders,
     },
 ];
 
