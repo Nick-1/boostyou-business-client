@@ -1,4 +1,3 @@
-// modules/orders/components/OrdersFilters.tsx
 import {
     Paper,
     Stack,
@@ -35,6 +34,13 @@ export const OrdersFilters: React.FC<Props> = ({ filters, onChange, onApply }) =
                 spacing={2}
                 alignItems="flex-end"
             >
+                <TextField
+                    size="small"
+                    label="Order Id"
+                    value={filters.orderId}
+                    onChange={(e) => update({ orderId: e.target.value })}
+                />
+
                 <FormControl sx={{ minWidth: 180 }} size="small">
                     <InputLabel id="status-filter-label">Status</InputLabel>
                     <Select

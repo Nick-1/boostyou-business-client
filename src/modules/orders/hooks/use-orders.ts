@@ -4,12 +4,13 @@ import { getOrders } from '../api/orders.api';
 import type { OrderListItemDto } from '../api/dto/get-orders-response.dto.ts';
 
 export type Filters = {
+    orderId: string;
     status: string;
     place: string;
     user: string;
 };
 
-const DEFAULT_FILTERS: Filters = { status: '', place: '', user: '' };
+const DEFAULT_FILTERS: Filters = { orderId: '', status: '', place: '', user: '' };
 
 export const useOrders = (initialPage = 0, initialLimit = 10) => {
     const [orders, setOrders] = useState<OrderListItemDto[]>([]);
@@ -17,6 +18,8 @@ export const useOrders = (initialPage = 0, initialLimit = 10) => {
 
     const [page, setPage] = useState(initialPage);
     const [rowsPerPage, setRowsPerPage] = useState(initialLimit);
+
+    console.info(rowsPerPage);
 
     const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
     const [appliedFilters, setAppliedFilters] = useState<Filters>(DEFAULT_FILTERS);
@@ -50,6 +53,7 @@ export const useOrders = (initialPage = 0, initialLimit = 10) => {
                 const response = await getOrders({
                     page: page + 1,
                     limit: rowsPerPage,
+                    orderId: appliedFilters.orderId || undefined,
                     status: appliedFilters.status || undefined,
                     place: appliedFilters.place || undefined,
                     user: appliedFilters.user || undefined,

@@ -4,20 +4,22 @@ import { API_ROUTE } from '../../../services/api/routes.ts';
 import type { OrderListResponseDto } from './dto/get-orders-response.dto.ts';
 
 export type OrdersQueryParams = {
-    page: number;
-    limit?: number;
+    orderId?: string;
     status?: string;
     place?: string;
     user?: string;
+    page: number;
+    limit?: number;
 };
 
 const DEFAULT_ORDER_LIMIT = 10;
 
 export const getOrders = (params: OrdersQueryParams) =>
     Api.get<OrderListResponseDto>(API_ROUTE.orders, {
-        page: params.page,
-        limit: params.limit || DEFAULT_ORDER_LIMIT,
+        orderId: params.orderId,
         orderStatus: params.status,
         places: params.place,
         userLogin: params.user,
+        page: params.page,
+        limit: params.limit || DEFAULT_ORDER_LIMIT,
     });

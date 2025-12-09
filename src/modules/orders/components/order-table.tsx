@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
     Paper,
     Box,
@@ -10,8 +11,8 @@ import {
     TableCell,
     TableBody,
     TablePagination,
+    TableSortLabel,
 } from '@mui/material';
-
 import type { OrderListItemDto } from '../api/dto/get-orders-response.dto.ts';
 
 type Props = {
@@ -27,7 +28,10 @@ type Props = {
     ) => void;
 };
 
-const formatDateTime = (value: string) =>
+type SortField = 'status' | 'user' | 'totalPrice' | 'createdAt';
+type SortDirection = 'asc' | 'desc';
+
+const formatDateTime = (value: string | Date) =>
     new Date(value).toLocaleString('uk-UA', {
         year: 'numeric',
         month: '2-digit',
@@ -45,85 +49,206 @@ export const OrdersTable: React.FC<Props> = ({
      error,
      onPageChange,
      onRowsPerPageChange,
-}) => (
-    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-        {loading && (
-            <Box
-                sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    py: 4,
-                }}
-            >
-                <CircularProgress />
-            </Box>
-        )}
+    }) => {
+    const [sortField, setSortField] = useState<SortField>('createdAt');
+    const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-        {error && !loading && (
-            <Box sx={{ p: 2 }}>
-                <Typography color="error">Error: {error}</Typography>
-            </Box>
-        )}
+    const handleSortClick = (field: SortField) => {
+        if (sortField === field) {
+            // повторний клік по тій самій колонці — міняємо напрямок
+            setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+        } else {
+            // клік по новій колонці — ставимо її і починаємо з asc
+            setSortField(field);
+            setSortDirection('asc');
+        }
+    };
 
-        {!loading && !error && (
-            <>
-                <TableContainer>
-                    <Table size="small">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>ID</TableCell>
-                                <TableCell>Status</TableCell>
-                                <TableCell>Customer</TableCell>
-                                <TableCell align="right">Total</TableCell>
-                                <TableCell>Currency</TableCell>
-                                <TableCell>Created At</TableCell>
-                                <TableCell>Items count</TableCell>
-                                <TableCell>Places</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {orders.map((order) => {
-                                const itemsCount = order.items.length;
-                                const places = order.items
-                                    .map((item) => `${item.place.name} (${item.place.city})`)
-                                    .join(', ');
+    const createSortHandler = (field: SortField) => () => handleSortClick(field);
 
-                                return (
-                                    <TableRow key={order.id} hover>
-                                        <TableCell>{order.id}</TableCell>
-                                        <TableCell>{order.status}</TableCell>
-                                        <TableCell>{order.user?.login}</TableCell>
-                                        <TableCell align="right">{order.totalPrice}</TableCell>
-                                        <TableCell>{order.currency}</TableCell>
-                                        <TableCell>{formatDateTime(order.createdAt)}</TableCell>
-                                        <TableCell>{itemsCount}</TableCell>
-                                        <TableCell>{places}</TableCell>
-                                    </TableRow>
-                                );
-                            })}
+    const sortedOrders = useMemo(() => {
+        const copy = [...orders];
 
-                            {orders.length === 0 && (
+        copy.sort((a, b) => {
+            let aValue: string | number | Date = '';
+            let bValue: string | number | Date = '';
+
+            switch (sortField) {
+                case 'status':
+                    aValue = a.status;
+                    bValue = b.status;
+                    break;
+                case 'user':
+                    aValue = a.user?.login ?? '';
+                    bValue = b.user?.login ?? '';
+                    break;
+                case 'totalPrice':
+                    aValue = a.totalPrice;
+                    bValue = b.totalPrice;
+                    break;
+                case 'createdAt':
+                default:
+                    aValue = new Date(a.createdAt);
+                    bValue = new Date(b.createdAt);
+                    break;
+            }
+
+            let result: number;
+
+            if (aValue instanceof Date && bValue instanceof Date) {
+                result = aValue.getTime() - bValue.getTime();
+            } else if (typeof aValue === 'number' && typeof bValue === 'number') {
+                result = aValue - bValue;
+            } else {
+                result = String(aValue).localeCompare(String(bValue));
+            }
+
+            return sortDirection === 'asc' ? result : -result;
+        });
+
+        return copy;
+    }, [orders, sortField, sortDirection]);
+
+    return (
+        <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+            {loading && (
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        py: 4,
+                    }}
+                >
+                    <CircularProgress />
+                </Box>
+            )}
+
+            {error && !loading && (
+                <Box sx={{ p: 2 }}>
+                    <Typography color="error">Помилка: {error}</Typography>
+                </Box>
+            )}
+
+            {!loading && !error && (
+                <>
+                    <TableContainer>
+                        <Table size="small">
+                            <TableHead>
                                 <TableRow>
-                                    <TableCell colSpan={8} align="center">
-                                        Немає ордерів
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                                    <TableCell>ID</TableCell>
 
-                <TablePagination
-                    component="div"
-                    count={total}
-                    page={page}
-                    onPageChange={onPageChange}
-                    rowsPerPage={rowsPerPage}
-                    onRowsPerPageChange={onRowsPerPageChange}
-                    rowsPerPageOptions={[5, 10, 25, 50]}
-                />
-            </>
-        )}
-    </Paper>
-);
+                                    {/* Status */}
+                                    <TableCell
+                                        sortDirection={sortField === 'status' ? sortDirection : false}
+                                    >
+                                        <TableSortLabel
+                                            active={sortField === 'status'}
+                                            direction={sortField === 'status' ? sortDirection : 'asc'}
+                                            onClick={createSortHandler('status')}
+                                        >
+                                            Status
+                                        </TableSortLabel>
+                                    </TableCell>
+
+                                    {/* User */}
+                                    <TableCell
+                                        sortDirection={sortField === 'user' ? sortDirection : false}
+                                    >
+                                        <TableSortLabel
+                                            active={sortField === 'user'}
+                                            direction={sortField === 'user' ? sortDirection : 'asc'}
+                                            onClick={createSortHandler('user')}
+                                        >
+                                            Customer
+                                        </TableSortLabel>
+                                    </TableCell>
+
+                                    {/* Total */}
+                                    <TableCell
+                                        align="right"
+                                        sortDirection={
+                                            sortField === 'totalPrice' ? sortDirection : false
+                                        }
+                                    >
+                                        <TableSortLabel
+                                            active={sortField === 'totalPrice'}
+                                            direction={
+                                                sortField === 'totalPrice' ? sortDirection : 'asc'
+                                            }
+                                            onClick={createSortHandler('totalPrice')}
+                                        >
+                                            Total
+                                        </TableSortLabel>
+                                    </TableCell>
+
+                                    <TableCell>Currency</TableCell>
+
+                                    {/* Created At */}
+                                    <TableCell
+                                        sortDirection={sortField === 'createdAt' ? sortDirection : false}
+                                    >
+                                        <TableSortLabel
+                                            active={sortField === 'createdAt'}
+                                            direction={
+                                                sortField === 'createdAt' ? sortDirection : 'desc'
+                                            }
+                                            onClick={createSortHandler('createdAt')}
+                                        >
+                                            Created At
+                                        </TableSortLabel>
+                                    </TableCell>
+
+                                    <TableCell>Items count</TableCell>
+                                    <TableCell>Places</TableCell>
+                                </TableRow>
+                            </TableHead>
+
+                            <TableBody>
+                                {sortedOrders.map((order) => {
+                                    const itemsCount = order.items.length;
+                                    const places = order.items
+                                        .map((item) => `${item.place.name} (${item.place.city})`)
+                                        .join(', ');
+
+                                    return (
+                                        <TableRow key={order.id} hover>
+                                            <TableCell>{order.id}</TableCell>
+                                            <TableCell>{order.status}</TableCell>
+                                            <TableCell>{order.user?.login}</TableCell>
+                                            <TableCell align="right">
+                                                {order.totalPrice}
+                                            </TableCell>
+                                            <TableCell>{order.currency}</TableCell>
+                                            <TableCell>{formatDateTime(order.createdAt)}</TableCell>
+                                            <TableCell>{itemsCount}</TableCell>
+                                            <TableCell>{places}</TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+
+                                {sortedOrders.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={8} align="center">
+                                            Немає ордерів
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+
+                    <TablePagination
+                        component="div"
+                        count={total}
+                        page={page}
+                        onPageChange={onPageChange}
+                        rowsPerPage={rowsPerPage}
+                        onRowsPerPageChange={onRowsPerPageChange}
+                        rowsPerPageOptions={[5, 10, 25, 50]}
+                    />
+                </>
+            )}
+        </Paper>
+    );
+};

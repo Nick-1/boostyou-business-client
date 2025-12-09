@@ -1,8 +1,10 @@
 import { Box, Typography } from '@mui/material';
+
+import { MainPageContainer } from '../../../common/layout/main-page-container';
+
 import { useOrders } from '../hooks/use-orders.ts';
 import { OrdersFilters } from '../components/orders-filters.tsx';
 import { OrdersTable } from '../components/order-table.tsx';
-import { MainPageContainer } from '../../../common/layout/main-page-container';
 
 const OrdersPage = () => {
     const {
@@ -17,7 +19,7 @@ const OrdersPage = () => {
         applyFilters,
         handleChangePage,
         handleChangeRowsPerPage,
-    } = useOrders(0, 3);
+    } = useOrders(0, 100);
 
     return (
         <MainPageContainer>
