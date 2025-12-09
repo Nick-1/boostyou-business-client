@@ -14,6 +14,7 @@ import {
     TableSortLabel,
 } from '@mui/material';
 import type { OrderListItemDto } from '../api/dto/get-orders-response.dto.ts';
+import {OrderIdChip} from './order-id-chip.tsx';
 
 type Props = {
     orders: OrderListItemDto[];
@@ -211,7 +212,7 @@ export const OrdersTable: React.FC<Props> = ({
 
                                     return (
                                         <TableRow key={order.id} hover>
-                                            <TableCell>{getShortString(order.id)}</TableCell>
+                                            <TableCell><OrderIdChip id={order.id} /></TableCell>
                                             <TableCell>{order.status}</TableCell>
                                             <TableCell>{order.user?.login}</TableCell>
                                             <TableCell align="right">
