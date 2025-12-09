@@ -31,6 +31,8 @@ type Props = {
 type SortField = 'status' | 'user' | 'totalPrice' | 'createdAt';
 type SortDirection = 'asc' | 'desc';
 
+const getShortString = (id: string, showLetters: number = 4) => id.slice(0, showLetters) + '…';
+
 const formatDateTime = (value: string | Date) =>
     new Date(value).toLocaleString('uk-UA', {
         year: 'numeric',
@@ -55,10 +57,8 @@ export const OrdersTable: React.FC<Props> = ({
 
     const handleSortClick = (field: SortField) => {
         if (sortField === field) {
-            // повторний клік по тій самій колонці — міняємо напрямок
             setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
         } else {
-            // клік по новій колонці — ставимо її і починаємо з asc
             setSortField(field);
             setSortDirection('asc');
         }
@@ -182,8 +182,6 @@ export const OrdersTable: React.FC<Props> = ({
                                         </TableSortLabel>
                                     </TableCell>
 
-                                    <TableCell>Currency</TableCell>
-
                                     {/* Created At */}
                                     <TableCell
                                         sortDirection={sortField === 'createdAt' ? sortDirection : false}
@@ -208,18 +206,17 @@ export const OrdersTable: React.FC<Props> = ({
                                 {sortedOrders.map((order) => {
                                     const itemsCount = order.items.length;
                                     const places = order.items
-                                        .map((item) => `${item.place.name} (${item.place.city})`)
+                                        .map((item) => getShortString(item.place.name, 20))
                                         .join(', ');
 
                                     return (
                                         <TableRow key={order.id} hover>
-                                            <TableCell>{order.id}</TableCell>
+                                            <TableCell>{getShortString(order.id)}</TableCell>
                                             <TableCell>{order.status}</TableCell>
                                             <TableCell>{order.user?.login}</TableCell>
                                             <TableCell align="right">
                                                 {order.totalPrice}
                                             </TableCell>
-                                            <TableCell>{order.currency}</TableCell>
                                             <TableCell>{formatDateTime(order.createdAt)}</TableCell>
                                             <TableCell>{itemsCount}</TableCell>
                                             <TableCell>{places}</TableCell>
